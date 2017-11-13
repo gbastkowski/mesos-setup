@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  mesos-slave:
+    image: mesosphere/mesos-slave:1.4.0
+    privileged: true
+    command: >
+      --work_dir=/var/data/mesosslave-data
+      --master=zk://zookeeper:2181/mesos
+      --no-systemd_enable_support
+    environment:
+      - zookeeper_nodes_master=zk://zookeeper:2181/mesos
+      - work_dir=/var/data/mesosslave-data
+      - MESOS_PORT=5051
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys:ro

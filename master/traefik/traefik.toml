@@ -1,0 +1,44 @@
+debug = true
+# logLevel = "ERROR"
+
+# Entrypoints to be used by frontends that do not specify any entrypoint.
+# Each frontend can specify its own entrypoints.
+#
+# Optional
+# Default: ["http"]
+#
+# defaultEntryPoints = ["http", "https"]
+
+# Entrypoints definition
+#
+# Optional
+# Default:
+[entryPoints]
+    [entryPoints.http]
+    address = ":80"
+
+# Format is either "json" or "common".
+# format = "common"
+
+# [accessLog]
+# filePath = "/path/to/log/log.txt"
+# Format is either "json" or "common".
+# format = "common"
+
+[web]
+address = ":8080"
+
+[docker]
+# Default: "unix:///var/run/docker.sock"
+# endpoint = "tcp://10.10.10.10:2375"
+
+# Can be overridden by setting the "traefik.domain" label on a container.
+# Default: ""
+# domain = "docker.localhost"
+
+# Expose containers by default in traefik
+#
+# Optional
+# Default: true
+#
+# exposedbydefault = true

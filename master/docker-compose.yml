@@ -1,0 +1,86 @@
+version: '3.3'
+services:
+  zookeeper:
+    restart: always
+    image: netflixoss/exhibitor:1.5.2
+    labels:
+      - traefik.backend=zookeeper
+      - traefik.port=8080
+      - traefik.frontend.rule=Host:zookeeper.docker.localhost
+    ports:
+      - 2181:2181
+  mesos-master:
+    restart: always
+    image: mesosphere/mesos-master:1.4.0
+    command:
+      --quorum=1
+      --work_dir=/var/lib/mesos/master
+      --zk=zk://zookeeper:2181/mesos
+    labels:
+      - traefik.backend=mesos
+      - traefik.port=5050
+      - traefik.frontend.rule=Host:mesos.docker.localhost
+    ports:
+      - 5050:5050
+  marathon:
+    restart: always
+    image: mesosphere/marathon:v1.5.2
+    command:
+      --master local
+      --zk zk://zookeeper:2181/marathon
+      --http_port 7070
+    privileged: true
+    environment:
+      - zookeeper_nodes_master=zk://zookeeper:2181/mesos
+      - zookeeper_nodes=zk://zookeeper:2181/marathon
+    labels:
+      - traefik.backend=marathon
+      - traefik.port=7070
+      - traefik.frontend.rule=Host:marathon.docker.localhost
+  traefik:
+    restart: always
+    image: traefik
+    command:
+      --web
+      --docker --docker.domain=docker.localhost
+      --logLevel=DEBUG
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+    labels:
+      - traefik.backend=traefik
+      - traefik.port=8080
+      - traefik.frontend.rule=Host:traefik.docker.localhost
+
+  mesos-slave-1:
+    restart: always
+    image: mesosphere/mesos-slave:1.4.0
+    command:
+      --master=zk://zookeeper:2181/mesos
+      --no-systemd_enable_support
+      --work_dir=/var/lib/mesos/agent
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  mesos-slave-2:
+    restart: always
+    image: mesosphere/mesos-slave:1.4.0
+    command:
+      --master=zk://zookeeper:2181/mesos
+      --no-systemd_enable_support
+      --work_dir=/var/lib/mesos/agent
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  mesos-slave-3:
+    restart: always
+    image: mesosphere/mesos-slave:1.4.0
+    command:
+      --master=zk://zookeeper:2181/mesos
+      --no-systemd_enable_support
+      --work_dir=/var/lib/mesos/agent
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
