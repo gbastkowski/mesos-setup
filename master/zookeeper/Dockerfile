@@ -19,8 +19,8 @@ RUN mkdir /exhibitor                                                  && \
     apt-get -y install maven                                          && \
     wget -q $EXHIBITOR_POM_URL                                        && \
     mvn clean package                                                 && \
-    ls -l /exhibitor/target
-    # mv /exhibitor/target/exhibitor-1.6.0-shaded.jar /exhibitor/       && \
-    # rm -rf pom.xml target/ /root/.m2/ && apt-get remove maven
+    mv /exhibitor/target/exhibitor-1.6.0.jar /exhibitor/              && \
+    rm -rf exhibitor/pom.xml /exhibitor/target/ /root/.m2/            && \
+    apt-get -y remove maven
 
 EXPOSE 2181 2888 3888 8080
