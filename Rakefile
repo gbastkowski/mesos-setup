@@ -14,6 +14,7 @@ namespace :www do
         docker: {
           image:          'nginx:stable-alpine',
           forcePullImage: true,
+          network:        :BRIDGE,
           privileged:     false,
           parameters:     [
             { key: :rm, value: 'true' }
