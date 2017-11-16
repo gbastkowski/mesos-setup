@@ -1,17 +1,13 @@
 version: '3.3'
 services:
-  zookeeper:
-    build: ./zookeeper
-    # image: netflixoss/exhibitor:1.5.2
-    labels:
-      - traefik.backend=zookeeper
-      - traefik.port=8080
-      - traefik.frontend.rule=Host:zookeeper.docker.localhost
+  zookeeper: &zookeeper-defaults
+    image: zookeeper:3.4.11
     ports:
       - 2181:2181
-  mesos-master:
+  mesos-master: &mesos-master-defaults
     image: mesosphere/mesos-master:1.4.0
     command:
+      --hostname=mesos-master
       --quorum=1
       --work_dir=/var/lib/mesos/master
       --zk=zk://zookeeper:2181/mesos
@@ -21,20 +17,21 @@ services:
       - traefik.frontend.rule=Host:mesos.docker.localhost
     ports:
       - 5050:5050
-  # marathon:
-  #   image: mesosphere/marathon:v1.5.2
-  #   command:
-  #     --master local
-  #     --zk zk://zookeeper:2181/marathon
-  #     --http_port 7070
-  #   privileged: true
-  #   environment:
-  #     - zookeeper_nodes_master=zk://zookeeper:2181/mesos
-  #     - zookeeper_nodes=zk://zookeeper:2181/marathon
-  #   labels:
-  #     - traefik.backend=marathon
-  #     - traefik.port=7070
-  #     - traefik.frontend.rule=Host:marathon.docker.localhost
+    dns: 127.0.0.1
+  marathon:
+    image: mesosphere/marathon:v1.5.2
+    command:
+      --master local
+      --zk zk://zookeeper:2181/marathon
+      --http_port 7070
+    privileged: true
+    environment:
+      - zookeeper_nodes_master=zk://zookeeper:2181/mesos
+      - zookeeper_nodes=zk://zookeeper:2181/marathon
+    labels:
+      - traefik.backend=marathon
+      - traefik.port=7070
+      - traefik.frontend.rule=Host:marathon.docker.localhost
   traefik:
     image: traefik
     command:
@@ -51,7 +48,7 @@ services:
       - traefik.port=8080
       - traefik.frontend.rule=Host:traefik.docker.localhost
 
-  mesos-slave-1:
+  mesos-slave-1: &mesos-slave-defaults
     image: mesosphere/mesos-slave:1.4.0
     command:
       --master=zk://zookeeper:2181/mesos
@@ -60,21 +57,9 @@ services:
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
   mesos-slave-2:
-    image: mesosphere/mesos-slave:1.4.0
-    command:
-      --master=zk://zookeeper:2181/mesos
-      --no-systemd_enable_support
-      --work_dir=/var/lib/mesos/agent
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    <<: *mesos-slave-defaults
+
   mesos-slave-3:
-    image: mesosphere/mesos-slave:1.4.0
-    command:
-      --master=zk://zookeeper:2181/mesos
-      --no-systemd_enable_support
-      --work_dir=/var/lib/mesos/agent
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    <<: *mesos-slave-defaults
