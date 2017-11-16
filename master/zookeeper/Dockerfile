@@ -1,7 +1,9 @@
 FROM openjdk:8-jdk
 
-ENV EXHIBITOR_VERSION=1.7.0 \
-    ZOOKEEPER_MIRROR=https://archive.apache.org/dist/zookeeper \
+#
+# Install Zookeeper
+#
+ENV ZOOKEEPER_MIRROR=https://archive.apache.org/dist/zookeeper \
     ZOOKEEPER_VERSION=3.4.11
 
 RUN apt-get update                                                                                    && \
@@ -13,7 +15,14 @@ RUN apt-get update                                                              
     rm        /zookeeper-$ZOOKEEPER_VERSION.tar.gz*                                                   && \
     mv        /zookeeper-$ZOOKEEPER_VERSION /zookeeper
 
-ENV EXHIBITOR_POM_URL=https://raw.githubusercontent.com/soabase/exhibitor/exhibitor-$EXHIBITOR_VERSION/exhibitor-standalone/src/main/resources/buildscripts/standalone/maven/pom.xml
+EXPOSE 2181 2888 3888
+
+#
+# Install Exhibitor
+#
+ENV EXHIBITOR_VERSION=1.7.0 \
+    EXHIBITOR_POM_URL=https://raw.githubusercontent.com/soabase/exhibitor/exhibitor-$EXHIBITOR_VERSION/exhibitor-standalone/src/main/resources/buildscripts/standalone/maven/pom.xml
+
 RUN mkdir /exhibitor                                                  && \
     cd    /exhibitor                                                  && \
     apt-get -y install maven                                          && \
@@ -23,4 +32,4 @@ RUN mkdir /exhibitor                                                  && \
     rm -rf exhibitor/pom.xml /exhibitor/target/ /root/.m2/            && \
     apt-get -y remove maven
 
-EXPOSE 2181 2888 3888 8080
+EXPOSE 8080
