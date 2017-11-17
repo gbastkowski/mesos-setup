@@ -1,5 +1,25 @@
 version: '3.3'
 services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
+    ports:
+      - 9200:9200
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.0.0
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.0.0
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:6.0.0
+  packetbeat:
+    image: docker.elastic.co/beats/packetbeat:6.0.0
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.0.0
+    labels:
+      - traefik.backend=kibana
+      - traefik.port=5601
+      - traefik.frontend.rule=Host:kibana.docker.localhost
+    ports:
+      - 5601:5601
   zookeeper: &zookeeper-defaults
     image: zookeeper:3.4.11
     ports:
