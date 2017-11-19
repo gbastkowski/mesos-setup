@@ -1,17 +1,17 @@
 version: '3.3'
 services:
+  logspout:
+    build: ./logspout
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ROUTE_URIS=logstash://logstash.docker.localhost:5000
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
     ports:
       - 9200:9200
   logstash:
     image: docker.elastic.co/logstash/logstash:6.0.0
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:6.0.0
-  metricbeat:
-    image: docker.elastic.co/beats/metricbeat:6.0.0
-  packetbeat:
-    image: docker.elastic.co/beats/packetbeat:6.0.0
   kibana:
     image: docker.elastic.co/kibana/kibana:6.0.0
     labels:
@@ -24,6 +24,7 @@ services:
     image: zookeeper:3.4.11
     ports:
       - 2181:2181
+
   mesos-master: &mesos-master-defaults
     image: mesosphere/mesos-master:1.4.0
     command:
