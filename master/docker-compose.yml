@@ -1,25 +1,45 @@
 version: '3.3'
 services:
-  logspout:
-    build: ./logspout
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - ROUTE_URIS=logstash://logstash.docker.localhost:5000
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
-    ports:
-      - 9200:9200
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.0.0
+    labels:
+      - traefik.backend=elasticsearch
+      - traefik.port=9200
+      - traefik.frontend.rule=Host:elasticsearch.docker.localhost
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ~/esdata:/usr/share/elasticsearch/data
   logstash:
-    image: docker.elastic.co/logstash/logstash:6.0.0
+    image: docker.elastic.co/logstash/logstash-oss:6.0.0
+    command:
+      --http.port 9600
+    volumes:
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    labels:
+      - traefik.backend=logstash
+      - traefik.port=9600
+      - traefik.frontend.rule=Host:logstash.docker.localhost
   kibana:
-    image: docker.elastic.co/kibana/kibana:6.0.0
+    image: docker.elastic.co/kibana/kibana-oss:6.0.0
     labels:
       - traefik.backend=kibana
       - traefik.port=5601
       - traefik.frontend.rule=Host:kibana.docker.localhost
     ports:
       - 5601:5601
+  logspout:
+    restart: always
+    build: ./logspout
+    command: logstash+tcp://logstash:5000 # TODO Switch to UDP
+    environment:
+      - traefik.backend=logspout
+      - traefik.port=80
+      - traefik.frontend.rule=Host:logspout.docker.localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   zookeeper: &zookeeper-defaults
     image: zookeeper:3.4.11
     ports:
@@ -71,6 +91,7 @@ services:
 
   mesos-slave-1: &mesos-slave-defaults
     image: mesosphere/mesos-slave:1.4.0
+    restart: always
     command:
       --master=zk://zookeeper:2181/mesos
       --no-systemd_enable_support
@@ -79,8 +100,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  mesos-slave-2:
-    <<: *mesos-slave-defaults
+  # mesos-slave-2:
+  #   <<: *mesos-slave-defaults
 
-  mesos-slave-3:
-    <<: *mesos-slave-defaults
+  # mesos-slave-3:
+  #   <<: *mesos-slave-defaults
+
+volumes:
+  esdata1:
+    driver: local
