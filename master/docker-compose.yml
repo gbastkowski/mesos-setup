@@ -35,6 +35,7 @@ services:
     build: ./logspout
     command: logstash+tcp://logstash:5000 # TODO Switch to UDP
     environment:
+      - DOCKER_LABELS=yes
       - traefik.backend=logspout
       - traefik.port=80
       - traefik.frontend.rule=Host:logspout.docker.localhost
