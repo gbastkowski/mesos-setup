@@ -12,16 +12,6 @@ services:
         hard: -1
     volumes:
       - ~/esdata:/usr/share/elasticsearch/data
-  logstash:
-    image: docker.elastic.co/logstash/logstash-oss:6.0.0
-    command:
-      --http.port 9600
-    volumes:
-      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    labels:
-      - traefik.backend=logstash
-      - traefik.port=9600
-      - traefik.frontend.rule=Host:logstash.docker.localhost
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:6.0.0
     labels:
@@ -30,17 +20,6 @@ services:
       - traefik.frontend.rule=Host:kibana.docker.localhost
     ports:
       - 5601:5601
-  logspout:
-    restart: always
-    build: ./logspout
-    command: logstash+tcp://logstash:5000 # TODO Switch to UDP
-    environment:
-      - DOCKER_LABELS=yes
-      - traefik.backend=logspout
-      - traefik.port=80
-      - traefik.frontend.rule=Host:logspout.docker.localhost
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
   zookeeper: &zookeeper-defaults
     image: zookeeper:3.4.11
     ports:
