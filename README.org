@@ -1,0 +1,42 @@
+* Experiments in a Mesos Cluster
+
+First of all, this project is to set up a local cluster
+for development and experimentation.
+
+The whole setup is based on docker and docker-compose and aims
+to be as simple as possible.
+
+Simple as possible also means, that the workstation on which this stuff should run,
+must not require any preparation.
+
+** Requirements
+   Unfortunately, a minimum setup is required to run this stuff.
+   
+*** Install Docker and docker-compose
+    Well, this is obvious
+    
+*** Tweak Your local DNS
+    Not so obvious anymore.
+    However, this demo-setup does some magic with reverse HTTP proxying.
+    For this to work, cause it's based on DNS names, some DNS tweaks must be applied to the workstation.
+    
+**** Ensure that DNS queries for =docker.localhost= go to localhost
+     E.g. on macOS, by creating a file =/etc/resolver/docker.localhost=, containing the single line:
+     =nameserver 127.0.0.1=
+     
+**** Install dnsmasq to service =docker.localhost= queries
+     E.g. =brew install dnsmasq= on macOS.
+     One line in the config: =address =/.docker.localhost/127.0.0.1=
+     Don't forget to activate the service, e.g. =brew services start dnsmasq=
+
+** Docker-machine (not supported yet)
+  #+BEGIN_SRC bash
+  docker-machine create master1 && eval "$(docker-machine env master1)"
+  docker-machine create master2 && eval "$(docker-machine env master2)"
+  docker-machine create agent1 && eval "$(docker-machine env agent1)"
+  docker-machine create agent2 && eval "$(docker-machine env agent2)"
+  #+END_SRC 
+
+ 
+* References
+** https://getgrav.org/blog/macos-sierra-apache-mysql-vhost-apc
