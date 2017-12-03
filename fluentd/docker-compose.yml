@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+  fluentd:
+    image: fluent/fluentd
+    ports:
+      - 24224:24224
+      - 24224:24224/udp
+    volumes:
+      - fluentd:/fluentd/log
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "10"
+volumes:
+  fluentd:
+    driver: local

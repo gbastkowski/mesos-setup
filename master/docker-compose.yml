@@ -1,32 +1,40 @@
-version: '3.3'
+version: '3.4'
 services:
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.0.0
+    container_name: elasticsearch
     labels:
       - traefik.backend=elasticsearch
       - traefik.port=9200
       - traefik.frontend.rule=Host:elasticsearch.docker.localhost
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    volumes:
-      - ~/esdata:/usr/share/elasticsearch/data
-  kibana:
-    image: docker.elastic.co/kibana/kibana-oss:6.0.0
-    labels:
-      - traefik.backend=kibana
-      - traefik.port=5601
-      - traefik.frontend.rule=Host:kibana.docker.localhost
+    # volumes:
+    #   - ~/esdata:/usr/share/elasticsearch/data
+
+  fluentd:
+    image: fluent/fluentd:v0.12
+    container_name: fluentd
     ports:
-      - 5601:5601
+      - 24224:24224
+      - 24224:24224/udp
+
   zookeeper: &zookeeper-defaults
     image: zookeeper:3.4.11
+    container_name: zookeeper
     ports:
       - 2181:2181
 
   mesos-master: &mesos-master-defaults
     image: mesosphere/mesos-master:1.4.0
+    container_name: mesos-master
     command:
       --hostname=mesos-master
       --quorum=1
@@ -39,8 +47,10 @@ services:
     ports:
       - 5050:5050
     dns: 127.0.0.1
+
   marathon:
     image: mesosphere/marathon:v1.5.2
+    container_name: marathon
     command:
       --master local
       --zk zk://zookeeper:2181/marathon
@@ -53,8 +63,10 @@ services:
       - traefik.backend=marathon
       - traefik.port=7070
       - traefik.frontend.rule=Host:marathon.docker.localhost
+
   traefik:
     image: traefik
+    container_name: traefik
     command:
       --web
       --docker --docker.domain=docker.localhost
@@ -68,9 +80,27 @@ services:
       - traefik.backend=traefik
       - traefik.port=8080
       - traefik.frontend.rule=Host:traefik.docker.localhost
+    depends_on:
+      - fluentbit
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: "traefik"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.0.0
+    container_name: kibana
+    labels:
+      - traefik.backend=kibana
+      - traefik.port=5601
+      - traefik.frontend.rule=Host:kibana.docker.localhost
+    ports:
+      - 5601:5601
 
   mesos-slave-1: &mesos-slave-defaults
     image: mesosphere/mesos-slave:1.4.0
+    container_name: mesos-slave-1
     restart: always
     command:
       --master=zk://zookeeper:2181/mesos
@@ -79,6 +109,13 @@ services:
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - fluentbit
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: "mesos-slave"
 
   # mesos-slave-2:
   #   <<: *mesos-slave-defaults
