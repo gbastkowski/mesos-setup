@@ -9,13 +9,20 @@ debug = true
 #
 # defaultEntryPoints = ["http", "https"]
 
+#
 # Entrypoints definition
 #
-# Optional
-# Default:
 [entryPoints]
     [entryPoints.http]
     address = ":80"
+      [entryPoints.http.redirect]
+      entryPoint = "https"
+    [entryPoint.https]
+    address = ":443"
+      [entryPoints.https.tls]
+        [[entryPoints.https.tls.certificates]]
+        certFile = "traefik.crt"
+        keyFile  = "traefik.key"
 
 # Format is either "json" or "common".
 # format = "common"
