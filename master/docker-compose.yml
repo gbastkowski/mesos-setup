@@ -20,11 +20,24 @@ services:
     #   - ~/esdata:/usr/share/elasticsearch/data
 
   fluentd:
-    image: fluent/fluentd:v0.12
+    build: ./fluentd/
     container_name: fluentd
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch
+    volumes:
+      - ./fluentd/:/fluentd/etc/
+    environment:
+      - FLUENTD_CONF=fluentd.conf
     ports:
+      - 9880:9880
       - 24224:24224
       - 24224:24224/udp
+    labels:
+      - traefik.backend=fluentd
+      - traefik.port=9880
+      - traefik.frontend.rule=Host:fluentd.docker.localhost
 
   zookeeper: &zookeeper-defaults
     image: zookeeper:3.4.11
@@ -81,12 +94,12 @@ services:
       - traefik.port=8080
       - traefik.frontend.rule=Host:traefik.docker.localhost
     depends_on:
-      - fluentbit
+      - fluentd
     logging:
       driver: fluentd
       options:
         fluentd-address: localhost:24224
-        tag: "traefik"
+        tag: traefik
 
   kibana:
     image: docker.elastic.co/kibana/kibana-oss:6.0.0
@@ -110,12 +123,14 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - fluentbit
+      - fluentd
+    links:
+      - fluentd
     logging:
       driver: fluentd
       options:
         fluentd-address: localhost:24224
-        tag: "mesos-slave"
+        tag: mesos-slave
 
   # mesos-slave-2:
   #   <<: *mesos-slave-defaults

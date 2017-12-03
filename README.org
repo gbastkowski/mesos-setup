@@ -64,4 +64,7 @@ must not require any preparation.
 * References
 ** https://getgrav.org/blog/macos-sierra-apache-mysql-vhost-apc
 ** http://fluentbit.io/documentation/0.12/
-
+** https://www.fluentd.org/guides/recipes/docker-logging
+** https://github.com/fluent/fluentd-docker-image
+** http://www.rubular.com/
+** https://github.com/uken/fluent-plugin-elasticsearch
