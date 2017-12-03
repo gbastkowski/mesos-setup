@@ -1,5 +1,4 @@
 * Experiments in a Mesos Cluster
-
 First of all, this project is to set up a local cluster
 for development and experimentation.
 
@@ -9,6 +8,16 @@ to be as simple as possible.
 Simple as possible also means, that the workstation on which this stuff should run,
 must not require any preparation.
 
+* System Architecture
+  Originally, the setup was intended to be a single =docker-compose= file.
+  This doesn't work because of the logging requirements:
+  Logging must be available before everything else.
+  Hence, a separate setup for logging which needs to run first.
+
+** Logging
+   This is based on an [[https://www.elastic.co/products/elasticsearch][ElasticSearch]] database and [[https://www.fluentd.org/][fluentd]] resp. [[http://fluentbit.io/][fluent-bit]].
+
+* Start the Setup
 ** Requirements
    Unfortunately, a minimum setup is required to run this stuff.
    
@@ -29,6 +38,20 @@ must not require any preparation.
      One line in the config: =address =/.docker.localhost/127.0.0.1=
      Don't forget to activate the service, e.g. =brew services start dnsmasq=
 
+** Create Bridge Network
+   #+BEGIN_SRC bash
+   docker network create lognet
+   #+END_SRC
+   
+** Start Logging Service
+   #+BEGIN_SRC bash
+   cd elasticsearch
+   docker-compose up -d
+   #+END_SRC
+
+** Test Logging Setup
+   The easiest way to test whether Logging works is to start Kibana.
+
 ** Docker-machine (not supported yet)
   #+BEGIN_SRC bash
   docker-machine create master1 && eval "$(docker-machine env master1)"
@@ -40,3 +63,5 @@ must not require any preparation.
  
 * References
 ** https://getgrav.org/blog/macos-sierra-apache-mysql-vhost-apc
+** http://fluentbit.io/documentation/0.12/
+
