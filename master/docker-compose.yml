@@ -29,7 +29,7 @@ services:
     volumes:
       - ./fluentd/:/fluentd/etc/
     environment:
-      - FLUENTD_CONF=fluentd.conf
+      - FLUENTD_CONF=fluent.conf
     ports:
       - 9880:9880
       - 24224:24224
